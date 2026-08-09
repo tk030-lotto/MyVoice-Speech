@@ -7,17 +7,23 @@ echo   MyVoice Speech を起動しています...
 echo ===================================================
 echo.
 
-set "ROOT_DIR=%~dp0"
+pushd "%~dp0"
 
 echo [1/3] バックエンド API サーバーを起動中...
-start "MyVoice-Speech-Backend" cmd /k "cd /d "%ROOT_DIR%backend" && python app.py"
+pushd "%~dp0backend"
+start "MyVoice-Speech-Backend" cmd /k "python app.py"
+popd
 
 echo [2/3] Web GUI フロントエンドを起動中...
-start "MyVoice-Speech-Frontend" cmd /k "cd /d "%ROOT_DIR%frontend" && npm run dev"
+pushd "%~dp0frontend"
+start "MyVoice-Speech-Frontend" cmd /k "npm run dev"
+popd
 
-echo [3/3] ブラウザを起動中...
+echo [3/3] ブラウザで GUI を開いています...
 timeout /t 3 /nobreak >nul
 start http://localhost:5173
+
+popd
 
 echo.
 echo ===================================================
