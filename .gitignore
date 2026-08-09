@@ -1,18 +1,37 @@
-# Byte-compiled / optimized / DLL files
+# Python / Environment
 __pycache__/
 *.py[cod]
 *$py.class
-
-# PyTorch & Large Pretrained Models
-backend/GPT_SoVITS/GPT_SoVITS/pretrained_models/
-GPT_SoVITS/
-
-# Output WAV audio files
-backend/outputs/*.wav
-samples/*.trimmed.wav
-
-# Environment & IDE
-.venv/
 venv/
-.idea/
+env/
+.env
+
+# Node.js / Vite
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Audio Data & User Outputs (プライバシー・大容量ファイル除外)
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/outputs/*
+!backend/outputs/.gitkeep
+backend/saved_script.txt
+*.wav
+*.mp3
+*.m4a
+*.flac
+*.ogg
+*.trimmed.wav
+
+# GPT-SoVITS Weights & Pretrained Models
+backend/GPT_SoVITS/GPT_SoVITS/pretrained_models/*
+!backend/GPT_SoVITS/GPT_SoVITS/pretrained_models/.gitkeep
+
+# IDE & OS
 .vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
