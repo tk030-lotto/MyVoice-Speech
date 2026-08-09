@@ -9,4 +9,7 @@ pykakasi
 imageio-ffmpeg
 requests
 faster-whisper
+fastapi
+uvicorn
+python-multipart
 
