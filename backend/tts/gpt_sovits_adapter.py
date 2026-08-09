@@ -1,17 +1,24 @@
 import os
+import sys
 import torch
 import numpy as np
 import soundfile as sf
 from typing import Optional
 
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+gpt_sovits_root = os.path.join(base_dir, "GPT_SoVITS")
+gpt_sovits_core = os.path.join(gpt_sovits_root, "GPT_SoVITS")
+
+if gpt_sovits_root not in sys.path:
+    sys.path.insert(0, gpt_sovits_root)
+if gpt_sovits_core not in sys.path:
+    sys.path.insert(0, gpt_sovits_core)
+
 from .base import BaseTTSAdapter
-from ..audio.converter import convert_to_wav, change_speech_speed
-from ..audio.text_processor import JapaneseTextProcessor
 
 class GPTSoVITSAdapter(BaseTTSAdapter):
     """
-    GPT-SoVITS 高精度日本語ゼロショット音声クローンアダプター実装。
-    純粋なPython処理とモデル制御により、C++ビルド不要でローカル動作。
+    RVC-Boss 公式 GPT-SoVITS v2 エンジンによる本物のゼロショット音声クローンアダプター。
     """
 
     def __init__(self, device: Optional[str] = None):
@@ -20,53 +27,79 @@ class GPTSoVITSAdapter(BaseTTSAdapter):
         else:
             self.device = device
 
-        self.text_processor = JapaneseTextProcessor()
-        self.model = None
+        self.tts_engine = None
         self._is_loaded = False
 
     def load_model(self):
-        if self._is_loaded and self.model is not None:
+        if self._is_loaded and self.tts_engine is not None:
             return
 
         try:
-            from chatterbox.mtl_tts import ChatterboxMultilingualTTS
-            print(f"GPT-SoVITS 音声クローンモデルエンジンをロード中... (device: {self.device})")
-            self.model = ChatterboxMultilingualTTS.from_pretrained(device=self.device)
+            from TTS_infer_pack.TTS import TTS, TTS_Config
+
+            pretrained_dir = os.path.join(gpt_sovits_core, "pretrained_models")
+            fast_langdetect_dir = os.path.join(pretrained_dir, "fast_langdetect")
+            os.makedirs(fast_langdetect_dir, exist_ok=True)
+
+            t2s_ckpt = os.path.join(pretrained_dir, "gsv-v2final-pretrained", "s1bert25hz-5kh-longer-epoch=12-step=369668.ckpt")
+            vits_pth = os.path.join(pretrained_dir, "gsv-v2final-pretrained", "s2G2333k.pth")
+
+            if not os.path.exists(vits_pth):
+                vits_pth = os.path.join(pretrained_dir, "s2G488k.pth")
+
+            print(f"本物の GPT-SoVITS v2 エンジンをロード中... (device: {self.device})")
+            print(f"-> GPTモデル: {os.path.basename(t2s_ckpt)}")
+            print(f"-> SoVITSモデル: {os.path.basename(vits_pth)}")
+
+            dict_config = {
+                "custom": {
+                    "version": "v2",
+                    "device": self.device,
+                    "is_half": False,
+                    "t2s_weights_path": t2s_ckpt,
+                    "vits_weights_path": vits_pth,
+                    "bert_base_path": os.path.join(pretrained_dir, "chinese-roberta-wwm-ext-large"),
+                    "cnhuhbert_base_path": os.path.join(pretrained_dir, "chinese-hubert-base")
+                }
+            }
+
+            config = TTS_Config(dict_config)
+            self.tts_engine = TTS(config)
             self._is_loaded = True
-            print("音声クローンモデルのロードが完了しました。")
+            print("本物の GPT-SoVITS エンジンのロードが完了しました！")
+
         except Exception as e:
             self._is_loaded = False
-            raise RuntimeError(f"GPT-SoVITS モデルのロードに失敗しました: {e}")
+            import traceback
+            traceback.print_exc()
+            raise RuntimeError(f"本物の GPT-SoVITS エンジンのロードに失敗しました: {e}")
 
-    def preprocess_reference_audio(self, ref_path: str, output_clean_path: str) -> str:
+    def trim_reference_audio_for_gpt_sovits(self, ref_path: str, output_path: str, target_duration: float = 6.0) -> str:
         """
-        参照音声のこもり感・低音ノイズを除去し、人の声の周波数帯をクリアに強調・正規化する。
+        GPT-SoVITS 推奨仕様(3秒〜10秒)に合わせて参照音声を自動調整する。
         """
         import librosa
 
-        # 読み込み
-        data, sr = librosa.load(ref_path, sr=24000)
+        data, sr = librosa.load(ref_path, sr=32000)
+        duration = len(data) / sr
 
-        # 1. 80Hz以下の低音ノイズ・空調音・こもり成分(ハイパスフィルター)のカット
-        from scipy import signal
-        b, a = signal.butter(4, 100 / (sr / 2), btype='high')
-        filtered_data = signal.filtfilt(b, a, data)
+        if duration > 10.0 or duration < 3.0:
+            target_samples = int(target_duration * sr)
+            if len(data) > target_samples:
+                start_sample = int(0.5 * sr)
+                end_sample = start_sample + target_samples
+                data = data[start_sample:end_sample]
 
-        # 2. 中高音(2kHz-5kHz)の明瞭度強調
-        # 3. 音量正規化 (Loudness Normalization)
-        max_val = np.max(np.abs(filtered_data))
-        if max_val > 0:
-            normalized_data = filtered_data / max_val * 0.95
-        else:
-            normalized_data = filtered_data
-
-        os.makedirs(os.path.dirname(os.path.abspath(output_clean_path)), exist_ok=True)
-        sf.write(output_clean_path, normalized_data, sr)
-        print(f"参照音声のクリア化イコライジング完了: {output_clean_path}")
-        return output_clean_path
+        os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+        sf.write(output_path, data, sr)
+        return output_path
 
     def is_available(self) -> bool:
-        return True
+        try:
+            from TTS_infer_pack.TTS import TTS
+            return True
+        except ImportError:
+            return False
 
     def generate(
         self,
@@ -74,66 +107,55 @@ class GPTSoVITSAdapter(BaseTTSAdapter):
         reference_audio_path: str,
         output_path: str,
         language: str = "ja",
-        speed_factor: float = 0.85
+        prompt_text: str = "本日はご結婚おめでとうございます。",
+        prompt_language: str = "ja"
     ) -> str:
-        """
-        参照音声のこもりを除去し、日本語のイントネーション・アクセントを最適化して音声クローンを行う。
-        """
         if not text or not text.strip():
-            raise ValueError("テキストが空です。")
+            raise ValueError("原稿テキストが空です。")
 
         if not os.path.exists(reference_audio_path):
             raise FileNotFoundError(f"参照音声が見つかりません: {reference_audio_path}")
 
-        # 1. 参照音声のクリア化・こもり除去
-        clean_ref_path = reference_audio_path + ".clean.wav"
+        trimmed_ref_path = reference_audio_path + ".trimmed.wav"
         try:
-            ref_to_use = self.preprocess_reference_audio(reference_audio_path, clean_ref_path)
+            ref_to_use = self.trim_reference_audio_for_gpt_sovits(reference_audio_path, trimmed_ref_path, target_duration=6.0)
         except Exception as e:
-            print(f"参照音声のクリア化前処理スキップ: {e}")
             ref_to_use = reference_audio_path
 
-        # 2. 日本語テキストの最適なひらがな化＆ポーズ（息継ぎ）挿入
-        hiragana_text = self.text_processor.to_hiragana_with_pauses(text)
-        print(f"[GPT-SoVITS] 日本語音素テキスト: {hiragana_text}")
-
-        # 3. モデルロード
+        # モデルのロード
         self.load_model()
 
-        temp_output = output_path + ".raw.wav"
+        print(f"[GPT-SoVITS] 本物の公式エンジンでゼロショットクローン音声生成を開始します...")
 
-        print(f"[GPT-SoVITS] ゼロショット音声クローン生成中...")
         try:
-            # 高アライメントパラメータ (exaggeration=0.2, cfg_weight=0.85, temp=0.35)
-            wav_tensor = self.model.generate(
-                text=hiragana_text,
-                language_id="ja",
-                audio_prompt_path=ref_to_use,
-                exaggeration=0.2,
-                cfg_weight=0.85,
-                temperature=0.35,
-                repetition_penalty=2.0
-            )
+            inputs = {
+                "text": text,
+                "text_lang": language,
+                "ref_audio_path": ref_to_use,
+                "prompt_text": prompt_text,
+                "prompt_lang": prompt_language,
+                "top_k": 5,
+                "top_p": 1.0,
+                "temperature": 1.0,
+                "speed_factor": 1.0
+            }
 
-            if isinstance(wav_tensor, torch.Tensor):
-                wav_data = wav_tensor.squeeze().cpu().numpy()
-            else:
-                wav_data = wav_tensor
+            for sr, audio_data in self.tts_engine.run(inputs):
+                os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+                sf.write(output_path, audio_data, sr)
+                print(f"[GPT-SoVITS] 本物のクローン音声生成完了: {output_path} (sr={sr})")
 
-            os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
-            sr = getattr(self.model, "sr", 24000)
-            sf.write(temp_output, wav_data, sr)
+                if os.path.exists(trimmed_ref_path):
+                    try:
+                        os.remove(trimmed_ref_path)
+                    except Exception:
+                        pass
 
-            # 話速をスピーチ用に最適化
-            change_speech_speed(temp_output, output_path, speed_factor=speed_factor)
+                return os.path.abspath(output_path)
 
-            if os.path.exists(temp_output):
-                os.remove(temp_output)
-            if os.path.exists(clean_ref_path):
-                os.remove(clean_ref_path)
-
-            print(f"[GPT-SoVITS] 生成成功: {output_path}")
-            return os.path.abspath(output_path)
+            raise RuntimeError("音声データの生成ストリームが空でした。")
 
         except Exception as e:
-            raise RuntimeError(f"GPT-SoVITS による音声生成中にエラーが発生しました: {e}")
+            import traceback
+            traceback.print_exc()
+            raise RuntimeError(f"本物の GPT-SoVITS による音声生成中にエラーが発生しました: {e}")
