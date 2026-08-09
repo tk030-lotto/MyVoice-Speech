@@ -5,12 +5,6 @@
     "${workspaceFolder}/backend/GPT_SoVITS/GPT_SoVITS",
     "${workspaceFolder}/GPT_SoVITS"
   ],
-  "python.autoComplete.extraPaths": [
-    "${workspaceFolder}/backend",
-    "${workspaceFolder}/backend/GPT_SoVITS",
-    "${workspaceFolder}/backend/GPT_SoVITS/GPT_SoVITS",
-    "${workspaceFolder}/GPT_SoVITS"
-  ],
   "python.analysis.typeCheckingMode": "off",
   "python.analysis.diagnosticSeverityOverrides": {
     "reportMissingImports": "none",
@@ -40,13 +34,6 @@
     "**/GPT_SoVITS/**"
   ],
   "markdownlint.enable": false,
-  "markdownlint.focusMode": false,
-  "markdownlint.config": {
-    "default": false
-  },
-  "markdownlint.ignore": [
-    "**/*.md"
-  ],
   "css.lint.unknownAtRules": "ignore",
   "files.watcherExclude": {
     "**/__pyrefly_virtual_/**": true
