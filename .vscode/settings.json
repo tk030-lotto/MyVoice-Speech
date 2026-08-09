@@ -39,6 +39,14 @@
     "**/backend/GPT_SoVITS/**",
     "**/GPT_SoVITS/**"
   ],
+  "markdownlint.enable": false,
+  "markdownlint.focusMode": false,
+  "markdownlint.config": {
+    "default": false
+  },
+  "markdownlint.ignore": [
+    "**/*.md"
+  ],
   "css.lint.unknownAtRules": "ignore",
   "files.watcherExclude": {
     "**/__pyrefly_virtual_/**": true
