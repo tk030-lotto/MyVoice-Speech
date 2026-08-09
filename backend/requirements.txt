@@ -1,0 +1,5 @@
+chatterbox-tts
+soundfile
+torchaudio
+numpy
+scipy
