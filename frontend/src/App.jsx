@@ -68,10 +68,11 @@ export default function App() {
 
       const generatedResult = {
         filename: data.filename,
-        url: `${API_BASE_URL}${data.download_url}`,
+        url: `${API_BASE_URL}${data.download_url}?t=${Date.now()}`,
         textSnippet: scriptText.slice(0, 30) + (scriptText.length > 30 ? '...' : ''),
         timestamp: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
       };
+
 
       setResultAudio(generatedResult);
       setHistory((prev) => [generatedResult, ...prev]);

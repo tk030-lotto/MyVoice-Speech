@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { FileText, Save, FolderOpen, Trash2 } from 'lucide-react';
 
 export default function ScriptInputSection({
@@ -10,7 +10,24 @@ export default function ScriptInputSection({
 }) {
   const fileInputRef = useRef(null);
 
+  // マウント時に保存されたテキストがあれば自動ロード
+  useEffect(() => {
+    const autoLoadText = async () => {
+      try {
+        const res = await fetch(`${apiBaseUrl}/api/load-text`);
+        const data = await res.json();
+        if (res.ok && data.text && !text) {
+          setText(data.text);
+        }
+      } catch {
+        // サイレントエラー（自動ロード失敗時は無視）
+      }
+    };
+    autoLoadText();
+  }, []);
+
   const handleSaveText = async () => {
+
     try {
       const res = await fetch(`${apiBaseUrl}/api/save-text`, {
         method: 'POST',

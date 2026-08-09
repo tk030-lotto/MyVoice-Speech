@@ -27,10 +27,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOADS_DIR = os.path.join(BASE_DIR, "uploads")
 OUTPUTS_DIR = os.path.join(BASE_DIR, "outputs")
 TEXT_SAVE_PATH = os.path.join(BASE_DIR, "saved_script.txt")
+
 
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 os.makedirs(OUTPUTS_DIR, exist_ok=True)
@@ -134,16 +134,20 @@ def generate_speech(req: GenerateRequest):
 
 @app.get("/api/audio/{filename}")
 def get_audio(filename: str):
+    # Path Traversal 対策: ディレクトリトラバーサル文字を除去し安全なファイル名のみ使用
+    safe_filename = os.path.basename(filename)
+
     # uploads または outputs から探索
-    path_in_outputs = os.path.join(OUTPUTS_DIR, filename)
-    path_in_uploads = os.path.join(UPLOADS_DIR, filename)
+    path_in_outputs = os.path.join(OUTPUTS_DIR, safe_filename)
+    path_in_uploads = os.path.join(UPLOADS_DIR, safe_filename)
 
     if os.path.exists(path_in_outputs):
-        return FileResponse(path_in_outputs, media_type="audio/wav", filename=filename)
+        return FileResponse(path_in_outputs, media_type="audio/wav", filename=safe_filename)
     elif os.path.exists(path_in_uploads):
-        return FileResponse(path_in_uploads, filename=filename)
+        return FileResponse(path_in_uploads, filename=safe_filename)
     else:
         raise HTTPException(status_code=404, detail="指定された音声ファイルが見つかりません。")
+
 
 @app.post("/api/save-text")
 def save_text(req: SaveTextRequest):

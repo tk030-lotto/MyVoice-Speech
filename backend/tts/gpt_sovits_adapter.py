@@ -144,8 +144,9 @@ class GPTSoVITSAdapter(BaseTTSAdapter):
             prompt_text = "".join([seg.text for seg in segments]).strip()
             print(f"[GPT-SoVITS] 自動文字起こし成功: '{prompt_text}'")
         except Exception as e:
-            print(f"[GPT-SoVITS] 警告: Whisperによる文字起こしに失敗しました ({e})。デフォルト値を使用します。")
-            prompt_text = "ただいまご紹介に預かりました新郎の父と申します。"
+            print(f"[GPT-SoVITS] 警告: Whisperによる自動文字起こしに失敗しました ({e})。汎用プロンプトテキストを代替使用します。")
+            prompt_text = "こんにちは。本日もお忙しい中お集まりいただきありがとうございます。"
+
 
         return output_trimmed_path, prompt_text
 
