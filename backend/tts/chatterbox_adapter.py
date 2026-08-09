@@ -12,9 +12,6 @@ class ChatterboxAdapter(BaseTTSAdapter):
     """
 
     def __init__(self, device: Optional[str] = None):
-        """
-        :param device: "cuda" または "cpu"。未指定の場合は自動判定。
-        """
         if device is None:
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
         else:
@@ -24,9 +21,6 @@ class ChatterboxAdapter(BaseTTSAdapter):
         self._is_loaded = False
 
     def load_model(self):
-        """
-        モデルをローカル環境にロードする (遅延ロード)。
-        """
         if self._is_loaded and self.model is not None:
             return
 
@@ -41,9 +35,6 @@ class ChatterboxAdapter(BaseTTSAdapter):
             raise RuntimeError(f"Chatterbox Multilingual V3 モデルのロードに失敗しました: {e}")
 
     def is_available(self) -> bool:
-        """
-        エンジンが利用可能かを返す。
-        """
         try:
             from chatterbox.mtl_tts import ChatterboxMultilingualTTS
             return True
@@ -55,7 +46,11 @@ class ChatterboxAdapter(BaseTTSAdapter):
         text: str,
         reference_audio_path: str,
         output_path: str,
-        language: str = "ja"
+        language: str = "ja",
+        exaggeration: float = 0.5,
+        cfg_weight: float = 0.5,
+        temperature: float = 0.8,
+        repetition_penalty: float = 2.0
     ) -> str:
         """
         参照音声と日本語テキストから Chatterbox V3 を呼び出し、WAV音声を出力する。
@@ -64,6 +59,10 @@ class ChatterboxAdapter(BaseTTSAdapter):
         :param reference_audio_path: 本人の参照音声WAVパス
         :param output_path: 生成結果WAVの出力先パス
         :param language: 言語コード ('ja'デフォルト)
+        :param exaggeration: 抑揚・感情の強さ (0.0〜1.0)
+        :param cfg_weight: 参照音声への忠実度 (0.0〜1.0)
+        :param temperature: 生成の多様性・ランダム度 (0.1〜1.0)
+        :param repetition_penalty: 繰り返し防止ペナルティ
         :return: 生成されたWAVファイルの絶対パス
         """
         if not text or not text.strip():
@@ -84,29 +83,29 @@ class ChatterboxAdapter(BaseTTSAdapter):
         # モデルのロード
         self.load_model()
 
-        print(f"音声生成を開始します... (言語: {language}, 文字数: {len(text)})")
+        print(f"音声生成中... (exaggeration={exaggeration}, cfg_weight={cfg_weight}, temperature={temperature})")
         try:
-            # Chatterbox Multilingual V3 generate 呼び出し
             wav_tensor = self.model.generate(
                 text=text,
                 language_id=language,
-                audio_prompt_path=ref_path_to_use
+                audio_prompt_path=ref_path_to_use,
+                exaggeration=exaggeration,
+                cfg_weight=cfg_weight,
+                temperature=temperature,
+                repetition_penalty=repetition_penalty
             )
 
-            # Tensor -> NumPy 変換
             if isinstance(wav_tensor, torch.Tensor):
                 wav_data = wav_tensor.squeeze().cpu().numpy()
             else:
                 wav_data = wav_tensor
 
-            # 出力ディレクトリ作成 & WAV保存
             os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
             sr = getattr(self.model, "sr", 24000)
             sf.write(output_path, wav_data, sr)
 
             print(f"音声生成完了: {output_path}")
 
-            # 一時正規化ファイルのクリーンアップ
             if os.path.exists(normalized_ref_path):
                 try:
                     os.remove(normalized_ref_path)
