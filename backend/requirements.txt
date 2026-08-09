@@ -8,3 +8,5 @@ librosa
 pykakasi
 imageio-ffmpeg
 requests
+faster-whisper
+
