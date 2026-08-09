@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import uuid
 import torch
@@ -8,9 +9,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
 from tts.gpt_sovits_adapter import GPTSoVITSAdapter
 
 app = FastAPI(title="MyVoice Speech API", version="1.0.0")
+
 
 # CORS設定
 app.add_middleware(

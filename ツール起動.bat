@@ -7,20 +7,20 @@ echo   MyVoice Speech を起動しています...
 echo ===================================================
 echo.
 
-cd /d "%~dp0"
+set "ROOT_DIR=%~dp0"
 
-echo [1/3] FastAPI バックエンドサーバーを起動中...
-start "MyVoice Speech Backend" cmd /k "python backend/app.py"
+echo [1/3] バックエンド API サーバーを起動中...
+start "MyVoice-Speech-Backend" cmd /k "cd /d "%ROOT_DIR%backend" && python app.py"
 
 echo [2/3] Web GUI フロントエンドを起動中...
-start "MyVoice Speech Frontend" cmd /k "cd frontend && npm run dev"
+start "MyVoice-Speech-Frontend" cmd /k "cd /d "%ROOT_DIR%frontend" && npm run dev"
 
-echo [3/3] ブラウザで GUI を開いています...
+echo [3/3] ブラウザを起動中...
 timeout /t 3 /nobreak >nul
 start http://localhost:5173
 
 echo.
 echo ===================================================
-echo   MyVoice Speech の起動処理が完了しました。
-echo   ブラウザ (http://localhost:5173) をご確認ください。
+echo   起動処理が完了しました。
+echo   開いたウィンドウを閉じずにそのままご利用ください。
 echo ===================================================
