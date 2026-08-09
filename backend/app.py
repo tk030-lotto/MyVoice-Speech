@@ -1,21 +1,23 @@
 import os
 import sys
-import shutil
-import uuid
-import torch
-from typing import Optional
-from fastapi import FastAPI, File, UploadFile, HTTPException, Body
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from pydantic import BaseModel
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
-from tts.gpt_sovits_adapter import GPTSoVITSAdapter
+import shutil
+import uuid
+import torch  # type: ignore
+from typing import Optional
+from fastapi import FastAPI, File, UploadFile, HTTPException, Body  # type: ignore
+from fastapi.middleware.cors import CORSMiddleware  # type: ignore
+from fastapi.responses import FileResponse  # type: ignore
+from pydantic import BaseModel  # type: ignore
+
+from tts.gpt_sovits_adapter import GPTSoVITSAdapter  # type: ignore
 
 app = FastAPI(title="MyVoice Speech API", version="1.0.0")
+
 
 
 # CORS設定
@@ -170,5 +172,6 @@ def load_text():
         raise HTTPException(status_code=500, detail=f"テキスト読み込みエラー: {e}")
 
 if __name__ == "__main__":
-    import uvicorn
+    import uvicorn  # type: ignore
     uvicorn.run(app, host="127.0.0.1", port=8000)
+

@@ -1,0 +1,26 @@
+{
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/backend",
+    "${workspaceFolder}/backend/GPT_SoVITS",
+    "${workspaceFolder}/backend/GPT_SoVITS/GPT_SoVITS",
+    "${workspaceFolder}/GPT_SoVITS"
+  ],
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}/backend",
+    "${workspaceFolder}/backend/GPT_SoVITS",
+    "${workspaceFolder}/backend/GPT_SoVITS/GPT_SoVITS",
+    "${workspaceFolder}/GPT_SoVITS"
+  ],
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingImports": "none",
+    "reportMissingModuleSource": "none"
+  },
+  "python.analysis.exclude": [
+    "**/C:\\__pyrefly_virtual_**",
+    "**/__pyrefly_virtual_/**",
+    "**/.venv/**"
+  ],
+  "files.watcherExclude": {
+    "**/__pyrefly_virtual_/**": true
+  }
+}

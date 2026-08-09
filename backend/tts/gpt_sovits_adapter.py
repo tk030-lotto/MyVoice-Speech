@@ -1,8 +1,8 @@
 import os
 import sys
-import torch
-import numpy as np
-import soundfile as sf
+import torch  # type: ignore
+import numpy as np  # type: ignore
+import soundfile as sf  # type: ignore
 from typing import Optional
 
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -14,7 +14,11 @@ if gpt_sovits_root not in sys.path:
 if gpt_sovits_core not in sys.path:
     sys.path.insert(0, gpt_sovits_core)
 
-from .base import BaseTTSAdapter
+try:
+    from .base import BaseTTSAdapter  # type: ignore
+except ImportError:
+    from base import BaseTTSAdapter  # type: ignore
+
 
 class GPTSoVITSAdapter(BaseTTSAdapter):
     """
