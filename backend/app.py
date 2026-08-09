@@ -9,7 +9,8 @@ import shutil
 import uuid
 import torch  # type: ignore
 from typing import Optional
-from fastapi import FastAPI, File, UploadFile, HTTPException, Body  # type: ignore
+from fastapi import FastAPI, File, UploadFile, HTTPException  # type: ignore
+
 from fastapi.middleware.cors import CORSMiddleware  # type: ignore
 from fastapi.responses import FileResponse  # type: ignore
 from pydantic import BaseModel  # type: ignore

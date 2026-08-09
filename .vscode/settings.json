@@ -11,15 +11,35 @@
     "${workspaceFolder}/backend/GPT_SoVITS/GPT_SoVITS",
     "${workspaceFolder}/GPT_SoVITS"
   ],
+  "python.analysis.typeCheckingMode": "off",
   "python.analysis.diagnosticSeverityOverrides": {
     "reportMissingImports": "none",
-    "reportMissingModuleSource": "none"
+    "reportMissingModuleSource": "none",
+    "reportUnusedImport": "none",
+    "reportUnusedVariable": "none",
+    "reportGeneralTypeIssues": "none",
+    "reportOptionalSubscript": "none",
+    "reportOptionalMemberAccess": "none",
+    "reportOptionalCall": "none",
+    "reportOptionalIterable": "none",
+    "reportOptionalOperand": "none",
+    "reportTypedDictNotRequiredAccess": "none",
+    "reportPrivateImportUsage": "none",
+    "reportWildcardImportFromLibrary": "none",
+    "reportUndefinedVariable": "none"
   },
+  "python.analysis.ignore": [
+    "**/backend/GPT_SoVITS/**",
+    "**/GPT_SoVITS/**"
+  ],
   "python.analysis.exclude": [
     "**/C:\\__pyrefly_virtual_**",
     "**/__pyrefly_virtual_/**",
-    "**/.venv/**"
+    "**/.venv/**",
+    "**/backend/GPT_SoVITS/**",
+    "**/GPT_SoVITS/**"
   ],
+  "css.lint.unknownAtRules": "ignore",
   "files.watcherExclude": {
     "**/__pyrefly_virtual_/**": true
   }
