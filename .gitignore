@@ -35,3 +35,14 @@ backend/GPT_SoVITS/GPT_SoVITS/pretrained_models/*
 .DS_Store
 Thumbs.db
 *.log
+
+# Internal operational files (Common Rules)
+AI_RULES.md
+SKILLS.md
+.cursorrules
+.clauderules
+.clinerules
+.github/copilot-instructions.md
+.agents/
+knowledge/
+RECORD.md
